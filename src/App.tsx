@@ -18,7 +18,7 @@ function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddKid, setShowAddKid] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'recurring' | 'goals'>('dashboard');
-
+ 
   useEffect(() => {
     loadKids();
   }, []);
