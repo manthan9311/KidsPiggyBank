@@ -262,6 +262,7 @@ function App() {
     // so it processes properly tomorrow, but if we want it to apply IMMEDIATELY if created on the same day it's due,
     // setting last_executed to null handles the "has it executed" check.
     // @ts-ignore
+    // @ts-ignore
     const { error } = await supabase
       .from('recurring_transactions')
       .insert({
