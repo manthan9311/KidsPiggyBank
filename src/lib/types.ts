@@ -4,18 +4,21 @@ export interface Database {
       kids: {
         Row: {
           id: string;
+          user_id: string;
           name: string;
           current_balance: number;
           created_at: string;
         };
         Insert: {
           id?: string;
+          user_id?: string;
           name: string;
           current_balance?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
+          user_id?: string;
           name?: string;
           current_balance?: number;
           created_at?: string;
@@ -24,6 +27,7 @@ export interface Database {
       transactions: {
         Row: {
           id: string;
+          user_id: string;
           kid_id: string;
           amount: number;
           description: string;
@@ -32,6 +36,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id?: string;
           kid_id: string;
           amount: number;
           description: string;
@@ -40,6 +45,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           kid_id?: string;
           amount?: number;
           description?: string;
@@ -50,6 +56,7 @@ export interface Database {
       recurring_transactions: {
         Row: {
           id: string;
+          user_id: string;
           kid_id: string;
           amount: number;
           description: string;
@@ -64,6 +71,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id?: string;
           kid_id: string;
           amount: number;
           description: string;
@@ -78,6 +86,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           kid_id?: string;
           amount?: number;
           description?: string;
@@ -94,6 +103,7 @@ export interface Database {
       goals: {
         Row: {
           id: string;
+          user_id: string;
           kid_id: string;
           title: string;
           target_amount: number;
@@ -102,6 +112,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id?: string;
           kid_id: string;
           title: string;
           target_amount: number;
@@ -110,6 +121,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           kid_id?: string;
           title?: string;
           target_amount?: number;
