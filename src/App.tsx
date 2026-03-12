@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import type { Kid, Transaction, RecurringTransaction, Goal } from './lib/types';
-import { PiggyBank, Plus, TrendingUp, Target, Calendar, Clock, Trash2 } from 'lucide-react';
+import { PiggyBank, Plus, TrendingUp, Target, Calendar, Clock, Trash2, LogOut } from 'lucide-react';
 import KidSelector from './components/KidSelector';
 import AddKidModal from './components/AddKidModal';
 import TransactionForm from './components/TransactionForm';
@@ -9,6 +9,8 @@ import RecurringTransactionForm from './components/RecurringTransactionForm';
 import GoalForm from './components/GoalForm';
 import TransactionHistory from './components/TransactionHistory';
 import GoalsDisplay from './components/GoalsDisplay';
+import { useAuth } from './contexts/AuthContext';
+import Auth from './components/Auth';
 
 function App() {
   const [kidsList, setKidsList] = useState<Kid[]>([]);
@@ -18,10 +20,19 @@ function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddKid, setShowAddKid] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'recurring' | 'goals'>('dashboard');
- 
+  const { user, loading } = useAuth();
   useEffect(() => {
-    loadKids();
-  }, []);
+    if (user) {
+      loadKids();
+    } else {
+      // Clear state when user logs out
+      setKidsList([]);
+      setSelectedKid(null);
+      setTransactions([]);
+      setRecurringTransactions([]);
+      setGoals([]);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (selectedKid) {
@@ -199,10 +210,16 @@ function App() {
   };
 
   const addKid = async (name: string, startingBalance: number) => {
+    if (!user) return;
+    
     // @ts-ignore
     const { data, error } = await supabase
       .from('kids')
-      .insert({ name, current_balance: startingBalance })
+      .insert({ 
+        name, 
+        current_balance: startingBalance,
+        user_id: user.id 
+      })
       .select()
       .single();
 
@@ -217,11 +234,12 @@ function App() {
   };
 
   const addTransaction = async (amount: number, description: string) => {
-    if (!selectedKid) return;
+    if (!selectedKid || !user) return;
 
     const { error: transError } = await supabase
       .from('transactions')
       .insert({
+        user_id: user.id,
         kid_id: selectedKid.id,
         amount,
         description,
@@ -256,7 +274,7 @@ function App() {
     month?: number,
     dayOfYear?: number
   ) => {
-    if (!selectedKid) return;
+    if (!selectedKid || !user) return;
 
     // We optionally subtract a day on created_at or explicitly set last_executed to null 
     // so it processes properly tomorrow, but if we want it to apply IMMEDIATELY if created on the same day it's due,
@@ -266,6 +284,7 @@ function App() {
     const { error } = await supabase
       .from('recurring_transactions')
       .insert({
+        user_id: user.id,
         kid_id: selectedKid.id,
         amount,
         description,
@@ -302,11 +321,12 @@ function App() {
   };
 
   const addGoal = async (title: string, targetAmount: number) => {
-    if (!selectedKid) return;
+    if (!selectedKid || !user) return;
 
     const { error } = await supabase
       .from('goals')
       .insert({
+        user_id: user.id,
         kid_id: selectedKid.id,
         title,
         target_amount: targetAmount,
@@ -352,15 +372,39 @@ function App() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <header className="mb-8 text-center">
+        <header className="mb-8 relative">
           <div className="flex items-center justify-center gap-3 mb-2">
             <PiggyBank className="w-12 h-12 text-pink-500" />
             <h1 className="text-4xl font-bold text-gray-800">Pocket Money Tracker</h1>
           </div>
-          <p className="text-gray-600">Virtual piggy banks for kids</p>
+          <p className="text-gray-600 text-center">Virtual piggy banks for kids</p>
+          
+          <button
+            onClick={handleSignOut}
+            className="absolute right-0 top-0 flex items-center gap-2 text-gray-600 hover:text-pink-600 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </header>
 
         <KidSelector
