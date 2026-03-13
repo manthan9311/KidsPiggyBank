@@ -7,7 +7,7 @@ interface TransactionFormProps {
   themeColor?: string;
 }
   
-export default function TransactionForm({ onSubmit }: TransactionFormProps) {
+export default function TransactionForm({ onSubmit, themeColor }: TransactionFormProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [transactionType, setTransactionType] = useState<'credit' | 'debit'>('credit');
