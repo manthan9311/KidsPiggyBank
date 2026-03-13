@@ -7,6 +7,7 @@ export interface Database {
           user_id: string;
           name: string;
           current_balance: number;
+          theme_color: string;
           created_at: string;
         };
         Insert: {
@@ -14,6 +15,7 @@ export interface Database {
           user_id?: string;
           name: string;
           current_balance?: number;
+          theme_color?: string;
           created_at?: string;
         };
         Update: {
@@ -21,6 +23,7 @@ export interface Database {
           user_id?: string;
           name?: string;
           current_balance?: number;
+          theme_color?: string;
           created_at?: string;
         };
       };

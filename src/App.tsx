@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import type { Kid, Transaction, RecurringTransaction, Goal } from './lib/types';
-import { PiggyBank, Plus, TrendingUp, Target, Calendar, Clock, Trash2, LogOut } from 'lucide-react';
+import { PiggyBank, Plus, TrendingUp, Target, Calendar, Clock, Trash2, LogOut, Settings2, Check } from 'lucide-react';
 import KidSelector from './components/KidSelector';
 import AddKidModal from './components/AddKidModal';
+import { getTheme, themes } from './lib/themes';
 import TransactionForm from './components/TransactionForm';
 import RecurringTransactionForm from './components/RecurringTransactionForm';
 import GoalForm from './components/GoalForm';
@@ -209,15 +210,16 @@ function App() {
     setGoals(data || []);
   };
 
-  const addKid = async (name: string, startingBalance: number) => {
+  const addKid = async (name: string, startingBalance: number, themeColor: string) => {
     if (!user) return;
     
-    // @ts-ignore
+    // @ts-expect-error
     const { data, error } = await supabase
       .from('kids')
       .insert({ 
         name, 
         current_balance: startingBalance,
+        theme_color: themeColor,
         user_id: user.id 
       })
       .select()
@@ -376,6 +378,38 @@ function App() {
     await supabase.auth.signOut();
   };
 
+  const [showSettings, setShowSettings] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editTheme, setEditTheme] = useState('');
+
+  useEffect(() => {
+    if (selectedKid) {
+      setEditName(selectedKid.name);
+      setEditTheme(selectedKid.theme_color);
+    }
+  }, [selectedKid, showSettings]);
+
+  const updateKid = async () => {
+    if (!selectedKid || !user) return;
+
+    const { error } = await supabase
+      .from('kids')
+      .update({
+        name: editName,
+        theme_color: editTheme
+      })
+      .eq('id', selectedKid.id);
+
+    if (error) {
+      console.error('Error updating kid:', error);
+      return;
+    }
+
+    await loadKids();
+    setSelectedKid({ ...selectedKid, name: editName, theme_color: editTheme });
+    setShowSettings(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
@@ -388,19 +422,21 @@ function App() {
     return <Auth />;
   }
 
+  const currentTheme = getTheme(selectedKid?.theme_color);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className={`min-h-screen bg-gradient-to-br ${currentTheme.bg}`}>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <header className="mb-8 relative">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <PiggyBank className="w-12 h-12 text-pink-500" />
+            <PiggyBank className={`w-12 h-12 ${currentTheme.accent}`} />
             <h1 className="text-4xl font-bold text-gray-800">Pocket Money Tracker</h1>
           </div>
           <p className="text-gray-600 text-center">Virtual piggy banks for kids</p>
           
           <button
             onClick={handleSignOut}
-            className="absolute right-0 top-0 flex items-center gap-2 text-gray-600 hover:text-pink-600 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm"
+            className={`absolute right-0 top-0 flex items-center gap-2 text-gray-600 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm ${currentTheme.text.replace('text-', 'hover:text-')}`}
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -423,22 +459,75 @@ function App() {
 
         {selectedKid && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border-4 border-pink-200">
-              <div className="text-center">
-                <PiggyBank className="w-20 h-20 mx-auto mb-4 text-pink-500" />
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedKid.name}'s Balance</h2>
-                <div className="text-6xl font-bold text-pink-600 mb-4">
-                  ${selectedKid.current_balance.toFixed(2)}
+            <div className={`bg-white rounded-2xl shadow-xl p-8 border-4 ${currentTheme.border} relative`}>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="absolute right-6 top-6 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Kid Settings"
+              >
+                <Settings2 className="w-6 h-6" />
+              </button>
+
+              {showSettings ? (
+                <div className="max-w-md mx-auto space-y-4">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Edit {selectedKid.name}'s Profile</h3>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className={`w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none ${currentTheme.border.replace('border-', 'focus:border-')}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Theme Color</label>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.values(themes).map((theme) => (
+                        <button
+                          key={theme.id}
+                          onClick={() => setEditTheme(theme.id)}
+                          className={`w-8 h-8 rounded-full ${theme.primary} flex items-center justify-center transition-transform hover:scale-110 ${
+                            editTheme === theme.id ? 'ring-2 ring-offset-2 ring-gray-400' : ''
+                          }`}
+                        >
+                          {editTheme === theme.id && <Check className="w-4 h-4 text-white" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={updateKid}
+                      className={`flex-1 py-2 px-4 text-white rounded-lg font-semibold ${currentTheme.primary} ${currentTheme.secondary.replace('bg-', 'hover:bg-')}`}
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => setShowSettings(false)}
+                      className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center">
+                  <PiggyBank className={`w-20 h-20 mx-auto mb-4 ${currentTheme.accent}`} />
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedKid.name}'s Balance</h2>
+                  <div className={`text-6xl font-bold ${currentTheme.accent} mb-4`}>
+                    ${selectedKid.current_balance.toFixed(2)}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-100 overflow-hidden">
               <div className="flex border-b-2 border-gray-100">
                 <button
                   onClick={() => setActiveTab('dashboard')}
                   className={`flex-1 py-4 px-6 font-semibold transition-colors ${activeTab === 'dashboard'
-                      ? 'bg-pink-500 text-white'
+                      ? `${currentTheme.primary} text-white`
                       : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
@@ -447,7 +536,7 @@ function App() {
                 <button
                   onClick={() => setActiveTab('transactions')}
                   className={`flex-1 py-4 px-6 font-semibold transition-colors ${activeTab === 'transactions'
-                      ? 'bg-pink-500 text-white'
+                      ? `${currentTheme.primary} text-white`
                       : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
@@ -456,7 +545,7 @@ function App() {
                 <button
                   onClick={() => setActiveTab('recurring')}
                   className={`flex-1 py-4 px-6 font-semibold transition-colors ${activeTab === 'recurring'
-                      ? 'bg-pink-500 text-white'
+                      ? `${currentTheme.primary} text-white`
                       : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
@@ -465,7 +554,7 @@ function App() {
                 <button
                   onClick={() => setActiveTab('goals')}
                   className={`flex-1 py-4 px-6 font-semibold transition-colors ${activeTab === 'goals'
-                      ? 'bg-pink-500 text-white'
+                      ? `${currentTheme.primary} text-white`
                       : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
@@ -482,7 +571,7 @@ function App() {
                           <Plus className="w-5 h-5 text-green-600" />
                           Quick Add/Subtract
                         </h3>
-                        <TransactionForm onSubmit={addTransaction} />
+                        <TransactionForm onSubmit={addTransaction} themeColor={selectedKid.theme_color} />
                       </div>
 
                       <div>
@@ -523,6 +612,7 @@ function App() {
                         currentBalance={selectedKid.current_balance}
                         onComplete={completeGoal}
                         onDelete={deleteGoal}
+                        themeColor={selectedKid.theme_color}
                       />
                     )}
                   </div>
@@ -536,10 +626,10 @@ function App() {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-purple-600" />
+                          <Calendar className={`w-5 h-5 ${currentTheme.accent}`} />
                         Set Up Recurring Transaction
                       </h3>
-                      <RecurringTransactionForm onSubmit={addRecurringTransaction} />
+                        <RecurringTransactionForm onSubmit={addRecurringTransaction} themeColor={selectedKid.theme_color} />
                     </div>
 
                     <div>
@@ -553,7 +643,7 @@ function App() {
                           .map((rt) => (
                             <div
                               key={rt.id}
-                              className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200"
+                              className={`flex justify-between items-center p-4 bg-gradient-to-r ${currentTheme.bg.replace('from-', 'from-white to-')} rounded-lg border-2 ${currentTheme.border}`}
                             >
                               <div>
                                 <p className="font-semibold text-gray-800">{rt.description}</p>
@@ -591,10 +681,10 @@ function App() {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Target className="w-5 h-5 text-green-600" />
+                        <Target className={`w-5 h-5 ${currentTheme.accent}`} />
                         Add New Goal
                       </h3>
-                      <GoalForm onSubmit={addGoal} />
+                      <GoalForm onSubmit={addGoal} themeColor={selectedKid.theme_color} />
                     </div>
 
                     {goals.length > 0 && (
@@ -603,6 +693,7 @@ function App() {
                         currentBalance={selectedKid.current_balance}
                         onComplete={completeGoal}
                         onDelete={deleteGoal}
+                        themeColor={selectedKid.theme_color}
                       />
                     )}
                   </div>

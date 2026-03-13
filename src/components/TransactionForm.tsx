@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
+import { getTheme } from '../lib/themes';
 
 interface TransactionFormProps {
   onSubmit: (amount: number, description: string) => void;
+  themeColor?: string;
 }
   
 export default function TransactionForm({ onSubmit }: TransactionFormProps) {
@@ -20,6 +22,8 @@ export default function TransactionForm({ onSubmit }: TransactionFormProps) {
       setDescription('');
     }
   };
+
+  const theme = getTheme(themeColor);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,7 +65,7 @@ export default function TransactionForm({ onSubmit }: TransactionFormProps) {
             id="amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none"
+            className={`w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
             step="0.01"
             placeholder="0.00"
             required
@@ -78,7 +82,7 @@ export default function TransactionForm({ onSubmit }: TransactionFormProps) {
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none"
+          className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
           placeholder="What is this for?"
           required
         />

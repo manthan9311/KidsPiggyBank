@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
+import { getTheme } from '../lib/themes';
  
 interface RecurringTransactionFormProps {
   onSubmit: (
@@ -11,9 +12,10 @@ interface RecurringTransactionFormProps {
     month?: number,
     dayOfYear?: number
   ) => void;
+  themeColor?: string;
 }
 
-export default function RecurringTransactionForm({ onSubmit }: RecurringTransactionFormProps) {
+export default function RecurringTransactionForm({ onSubmit, themeColor }: RecurringTransactionFormProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [transactionType, setTransactionType] = useState<'credit' | 'debit'>('credit');
@@ -22,6 +24,8 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
   const [dayOfMonth, setDayOfMonth] = useState('1');
   const [month, setMonth] = useState('1');
   const [dayOfYear, setDayOfYear] = useState('1');
+
+  const theme = getTheme(themeColor);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +93,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
             id="rec-amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+            className={`w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
             step="0.01"
             placeholder="0.00"
             required
@@ -106,7 +110,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
           id="rec-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+          className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
           placeholder="e.g., Weekly allowance, Monthly subscription"
           required
         />
@@ -120,7 +124,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
           id="frequency"
           value={frequency}
           onChange={(e) => setFrequency(e.target.value as 'weekly' | 'monthly' | 'yearly')}
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+          className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
         >
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
@@ -137,7 +141,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
             id="day-of-week"
             value={dayOfWeek}
             onChange={(e) => setDayOfWeek(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+            className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
           >
             <option value="0">Sunday</option>
             <option value="1">Monday</option>
@@ -159,7 +163,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
             id="day-of-month"
             value={dayOfMonth}
             onChange={(e) => setDayOfMonth(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+            className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
           >
             {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
               <option key={day} value={day}>
@@ -180,7 +184,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
               id="month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
             >
               {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
                 <option key={i} value={i + 1}>
@@ -197,7 +201,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
               id="day-of-year"
               value={dayOfYear}
               onChange={(e) => setDayOfYear(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none ${theme.border.replace('border-', 'focus:border-')}`}
             >
               {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                 <option key={day} value={day}>
@@ -211,7 +215,7 @@ export default function RecurringTransactionForm({ onSubmit }: RecurringTransact
 
       <button
         type="submit"
-        className="w-full py-3 px-4 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+        className={`w-full py-3 px-4 text-white rounded-lg font-semibold transition-colors ${theme.primary} ${theme.secondary.replace('bg-', 'hover:bg-')}`}
       >
         Set Up Recurring Transaction
       </button>
