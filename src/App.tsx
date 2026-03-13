@@ -213,7 +213,7 @@ function App() {
   const addKid = async (name: string, startingBalance: number, themeColor: string) => {
     if (!user) return;
     
-    // @ts-expect-error
+    // @ts-expect-error - Supabase type inference issue
     const { data, error } = await supabase
       .from('kids')
       .insert({ 
