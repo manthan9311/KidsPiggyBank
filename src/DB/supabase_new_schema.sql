@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS kids (
   user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL,
   current_balance decimal(10, 2) DEFAULT 0,
+  theme_color text DEFAULT 'pink',
   created_at timestamptz DEFAULT now()
 );
 
